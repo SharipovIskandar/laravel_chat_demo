@@ -51,8 +51,8 @@ services:
             - "5173:5173"  # For Vite development server
         environment:
             - NODE_ENV=development
-        command: >
-            sh -c "npm install && npm run dev"
+#        command: >
+#            sh -c "npm install && npm run dev"
         networks:
             - app-network  # This should match the network name
 
