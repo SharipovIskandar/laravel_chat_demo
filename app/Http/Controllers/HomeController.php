@@ -48,4 +48,9 @@ class HomeController extends Controller
             'message' => "Message created and job dispatched.",
         ]);
     }
+
+    public function logout()
+    {
+        session()->flush();
+    }
 }

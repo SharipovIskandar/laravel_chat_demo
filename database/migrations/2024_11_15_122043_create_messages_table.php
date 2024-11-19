@@ -10,7 +10,8 @@ return new class extends Migration {
             $table->id();
             $table->timestamps();
 
-            $table->foreignId('user_id')->constrained();
+            $table->foreignId('sender_id')->constrained('users', 'id');
+            $table->foreignId('receiver_id')->constrained('users', 'id');
             $table->text('text')->nullable();
         });
     }
