@@ -26,11 +26,13 @@ export default {
             }
         },
         async postMessage(text) {
+            const receiverId = this.selectedUserId || localStorage.getItem('selectedUserId');
             try {
-                await axios.post(`/message`, {
+                const response = await axios.post('/message', {
                     text,
+                    receiver_id: receiverId,
                 });
-                // After posting, retrieve messages to include the new one
+
                 this.getMessages();
             } catch (err) {
                 console.log(err.message);
@@ -40,7 +42,6 @@ export default {
             try {
                 const response = await axios.get('/messages');
                 this.messages = response.data;
-                // Scroll to the bottom after messages are updated
                 this.scrollToBottom();
             } catch (err) {
                 console.log(err.message);
@@ -82,7 +83,7 @@ export default {
             <ul>
                 <li v-for="(user, index) in users" :key="index" class="user-item">
                     <li v-for="(foydalanuvchilar, index) in user">
-                        <button type="submit" @click="selectUser(user.id)" >{{ foydalanuvchilar.name }}</button>
+                        <button type="submit" @click="selectUser(foydalanuvchilar.id)" >{{ foydalanuvchilar.name }}</button>
                     </li>
                 </li>
             </ul>
@@ -91,8 +92,8 @@ export default {
         <div class="chat-box-container">
             <div class="chat-box" id="messagelist">
                 <div v-for="(message, index) in messages" :key="index" class="message">
-                    <strong>{{ message.user.name }}:</strong> {{ message.text }}
-                    <small class="text-muted float-right">{{ message.time }}</small>
+                        <strong>{{ message.user.name }}:</strong> {{ message.text }}
+                        <small class="text-muted float-right">{{ message.time }}</small>
                 </div>
             </div>
             <div class="input-area">
