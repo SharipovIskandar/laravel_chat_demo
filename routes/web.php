@@ -8,13 +8,16 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('/user/{id}', function () {
+    return view('welcome');
+});
 
 Auth::routes();
 Route::get('/home', [HomeController::class, 'index'])
     ->name('home');
-Route::get('/messages', [HomeController::class, 'messages'])
+Route::get('user/{id}/messages', [HomeController::class, 'messages'])
     ->name('messages');
-Route::post('/message', [HomeController::class, 'message'])
+Route::post('user/{id}/message', [HomeController::class, 'message'])
     ->name('message');
 Route::get('/logout', [HomeController::class, 'logout']);
 Route::get('/users', [UserController::class, 'index']);

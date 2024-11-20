@@ -1,6 +1,5 @@
 <script>
 import axios from 'axios';
-
 export default {
     data() {
         return {
@@ -9,50 +8,53 @@ export default {
             users: [],
             selectedUserId: null,
         };
+
     },
     methods: {
-
-        selectUser(userId){
-          this.selectedUserId = userId;
-          localStorage.setItem('setectedUserId', userId);
+        selectUser(userId) {
+            localStorage.setItem('selectedUserId', userId);
         },
-
-        async getAllUsers(){
+        async getAllUsers() {
             try {
                 const response = await axios.get('/users');
-                this.users = response.data
-            }catch (err){
-                console.log(err.messages)
+                this.users = response.data;
+            } catch (err) {
+                console.error(err.message);
             }
         },
         async postMessage(text) {
-            const receiverId = this.selectedUserId || localStorage.getItem('selectedUserId');
-            try {
-                const response = await axios.post('/message', {
-                    text,
-                    receiver_id: receiverId,
-                });
+            const userId = localStorage.getItem('selectedUserId');
 
+            if (!userId) {
+                alert("Iltimos, foydalanuvchini tanlang!");
+                return;
+            }
+
+            try {
+                await axios.post(`/user/${userId}/message`, {
+                    text: text,
+                    receiver_id: userId
+                });
                 this.getMessages();
             } catch (err) {
-                console.log(err.message);
+                console.error(err.message);
             }
         },
         async getMessages() {
             try {
-                const response = await axios.get('/messages');
+                const userId = localStorage.getItem('selectedUserId');
+
+                const response = await axios.get(`/user/${userId}/messages`);
                 this.messages = response.data;
                 this.scrollToBottom();
             } catch (err) {
-                console.log(err.message);
+                console.error(err.message);
             }
         },
         sendMessage() {
             if (this.newMessage.trim() !== "") {
                 this.postMessage(this.newMessage.trim());
                 this.newMessage = "";
-            } else {
-                return;
             }
         },
         scrollToBottom() {
@@ -66,9 +68,10 @@ export default {
     },
     created() {
         this.getMessages();
-        this.getAllUsers()
+        this.getAllUsers();
+        const selectedUserId = localStorage.getItem('selectedUserId');
         window.Echo.private("channel_for_everyone")
-            .listen('GotMessage', (e) => {
+            .listen('GotMessage', () => {
                 this.getMessages();
             });
     },
@@ -82,8 +85,10 @@ export default {
             <h5>Users</h5>
             <ul>
                 <li v-for="(user, index) in users" :key="index" class="user-item">
-                    <li v-for="(foydalanuvchilar, index) in user">
-                        <button type="submit" @click="selectUser(foydalanuvchilar.id)" >{{ foydalanuvchilar.name }}</button>
+                    <li v-for="(foydalanuvchilar, index) in user" :key="index">
+                        <a :href="`/user/${foydalanuvchilar.id}`" @click="selectUser(foydalanuvchilar.id)">
+                            {{ foydalanuvchilar.name }}
+                        </a>
                     </li>
                 </li>
             </ul>
