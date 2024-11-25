@@ -1,60 +1,35 @@
 <script>
 import axios from 'axios';
+import {ref} from 'vue';
+
 export default {
     data() {
         return {
-            messages: [],
+            messages: ref([]),
             newMessage: "",
-            users: [],
-            selectedUserId: null,
-            currentUserId: null,
+            rooms: []
         };
-
     },
     methods: {
-        selectUser(userId) {
-            localStorage.setItem('selectedUserId', userId);
-        },
-        async saveCurrentUserId(){
-          const response = await axios.get('/current/user');
-          const userId = response.data.user_id;
-          localStorage.setItem('currentUserId', userId)
-        },
-        async getAllUsers() {
-            try {
-                const response = await axios.get('/users');
-                this.users = response.data;
-            } catch (err) {
-                console.error(err.message);
-            }
-        },
         async postMessage(text) {
-            const userId = localStorage.getItem('selectedUserId');
-
-            if (!userId) {
-                alert("Iltimos, foydalanuvchini tanlang!");
-                return;
-            }
-
             try {
-                await axios.post(`/user/${userId}/message`, {
-                    text: text,
-                    receiver_id: userId
-                });
-                this.getMessages();
+                await axios.post(`/message`, {
+                    text,
+                })
+                // After posting, retrieve messages to include the new one
+                await this.getMessages();
             } catch (err) {
-                console.error(err.message);
+                console.log(err.message);
             }
         },
         async getMessages() {
             try {
-                const userId = localStorage.getItem('selectedUserId');
-
-                const response = await axios.get(`/user/${userId}/messages`);
+                const response = await axios.get('/messages');
                 this.messages = response.data;
+                // Scroll to the bottom after messages are updated
                 this.scrollToBottom();
             } catch (err) {
-                console.error(err.message);
+                console.log(err.message);
             }
         },
         sendMessage() {
@@ -70,54 +45,54 @@ export default {
                     messageList.scrollTop = messageList.scrollHeight;
                 }
             });
+        },
+        async getRooms() {
+            const response = await axios.get('http://localhost:8000/api/rooms');
+            this.rooms = response.data;
+        },
+        async getRoomMessages(id) {
+            const response = await axios.get('http://localhost:8000/api/rooms/' + id + '/messages');
+            this.messages = response.data;
         }
     },
     created() {
-        this.getMessages();
-        this.getAllUsers();
-        this.saveCurrentUserId();
-        const selectedUserId = localStorage.getItem('selectedUserId');
-        const currentUserId = localStorage.getItem('currentUserId');
-        const channelName = currentUserId < selectedUserId
-            ? `user_${currentUserId}_to_${selectedUserId}`
-            : `user_${currentUserId}_to_${selectedUserId}`;
-        console.log(channelName)
-        window.Echo.private(channelName)
-            .listen('GotMessage', (event) => {
-                console.log('Yangi xabar:', event.message);
+        // this.getMessages();
+
+        // window.Echo.private("channel_for_everyone")
+        //     .listen('GotMessage', (e) => {
+        //         this.getMessages();
+        //     });
+
+        window.Echo.private("room.1")
+            .listen('GotMessage', (e) => {
+                this.getMessages();
             });
+
+        this.getRooms()
     },
 };
 </script>
 
-
 <template>
-    <div class="container d-flex">
-        <div class="user-list">
-            <h5>Users</h5>
-            <ul>
-                <li v-for="(user, index) in users" :key="index" class="user-item">
-                    <li v-for="(foydalanuvchilar, index) in user" :key="index">
-                        <a :href="`/user/${foydalanuvchilar.id}`" @click="selectUser(foydalanuvchilar.id)">
-                            {{ foydalanuvchilar.name }}
-                        </a>
-                    </li>
-                </li>
-            </ul>
+    <div class="container">
+        <ul class="rooms-list">
+            <li v-for="room in rooms"
+                class="room">
+                <button @click="getRoomMessages(room.id)">
+                    {{ room.id }}
+                </button>
+            </li>
+        </ul>
+        <div class="chat-box" id="messagelist">
+            <div v-for="(message, index) in messages" :key="index" class="message">
+                <strong>{{ message.user_id }}:</strong> {{ message.text }}
+                <small class="text-muted float-right">{{ message.created_at }}</small>
+            </div>
         </div>
-
-        <div class="chat-box-container">
-            <div class="chat-box" id="messagelist">
-                <div v-for="(message, index) in messages" :key="index" class="message">
-                        <strong>{{ message.user.name }}:</strong> {{ message.text }}
-                        <small class="text-muted float-right">{{ message.time }}</small>
-                </div>
-            </div>
-            <div class="input-area">
-                <input v-model="newMessage" @keyup.enter="sendMessage" type="text"
-                       placeholder="Type your message here..." />
-                <button @click="sendMessage">Send</button>
-            </div>
+        <div class="input-area">
+            <input v-model="newMessage" @keyup.enter="sendMessage" type="text"
+                   placeholder="Type your message here..."/>
+            <button @click="sendMessage">Send</button>
         </div>
     </div>
 </template>
@@ -132,19 +107,5 @@ export default {
 
 .message {
     margin-bottom: 10px;
-}
-.user-item {
-    color: black;  /* Matnni qora rangda qilish */
-}
- .user-item button {
-     background-color: #007bff;
-     color: white;
-     border: none;
-     padding: 5px 10px;
-     cursor: pointer;
- }
-
-.user-item button:hover {
-    background-color: #0056b3;
 }
 </style>
