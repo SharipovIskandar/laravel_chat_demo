@@ -23,5 +23,10 @@ class UserController extends Controller
         }
     }
 
-
+    public function currentUserId()
+    {
+        return response()->json([
+            'user_id' => auth()->id()
+        ]);
+    }
 }

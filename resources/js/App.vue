@@ -7,12 +7,18 @@ export default {
             newMessage: "",
             users: [],
             selectedUserId: null,
+            currentUserId: null,
         };
 
     },
     methods: {
         selectUser(userId) {
             localStorage.setItem('selectedUserId', userId);
+        },
+        async saveCurrentUserId(){
+          const response = await axios.get('/current/user');
+          const userId = response.data.user_id;
+          localStorage.setItem('currentUserId', userId)
         },
         async getAllUsers() {
             try {
@@ -69,10 +75,16 @@ export default {
     created() {
         this.getMessages();
         this.getAllUsers();
+        this.saveCurrentUserId();
         const selectedUserId = localStorage.getItem('selectedUserId');
-        window.Echo.private("channel_for_everyone")
-            .listen('GotMessage', () => {
-                this.getMessages();
+        const currentUserId = localStorage.getItem('currentUserId');
+        const channelName = currentUserId < selectedUserId
+            ? `user_${currentUserId}_to_${selectedUserId}`
+            : `user_${currentUserId}_to_${selectedUserId}`;
+        console.log(channelName)
+        window.Echo.private(channelName)
+            .listen('GotMessage', (event) => {
+                console.log('Yangi xabar:', event.message);
             });
     },
 };

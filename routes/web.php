@@ -21,3 +21,4 @@ Route::post('user/{id}/message', [HomeController::class, 'message'])
     ->name('message');
 Route::get('/logout', [HomeController::class, 'logout']);
 Route::get('/users', [UserController::class, 'index']);
+Route::get('/current/user', [UserController::class, 'currentUserId']);

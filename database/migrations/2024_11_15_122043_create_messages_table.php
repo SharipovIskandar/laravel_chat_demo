@@ -10,8 +10,8 @@ return new class extends Migration {
             $table->id();
             $table->timestamps();
 
-            $table->foreignId('sender_id')->constrained('users', 'id');
-            $table->foreignId('receiver_id')->constrained('users', 'id');
+            $table->foreignId('user_id')->constrained('users', 'id');
+            $table->foreignId('room_id')->constrained('rooms', 'id');
             $table->text('text')->nullable();
         });
     }

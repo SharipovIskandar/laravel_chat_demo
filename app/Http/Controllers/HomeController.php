@@ -37,23 +37,19 @@ class HomeController extends Controller
 
     public function message(Request $request): JsonResponse
     {
-        $receiverId = $request->get('receiver_id'); // POST so'rovdan receiver_idni olish
-
+        // 1. store
         $message = Message::create([
-            'sender_id' => auth()->id(),
-            'receiver_id' => $receiverId,
+            'user_id' => auth()->id(),
             'text' => $request->get('text'),
+            'room_id' => 1,
         ]);
 
+        // 2. Queue - Q - Kyu
         SendMessage::dispatch($message);
 
         return response()->json([
             'success' => true,
             'message' => "Message created and job dispatched.",
         ]);
-    }
-    public function logout()
-    {
-        session()->flush();
     }
 }
