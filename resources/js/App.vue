@@ -3,6 +3,9 @@ import axios from 'axios';
 import {ref} from 'vue';
 
 export default {
+    props: {
+      user: null,
+    },
     data() {
         return {
             messages: ref([]),
